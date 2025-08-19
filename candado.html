@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candado Numérico Romántico</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: 
+  url('mini-hearth.png') repeat, linear-gradient(135deg, #ea9aa9, #915584);
+  background-size: 60% auto, cover;
+
+            font-family: 'Georgia', serif;
+            overflow: hidden; 
+        }
+
+        .lock-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(145deg, #ce8c99, #a75567);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.2);
+            position: relative;
+            width: 280px;
+        }
+
+        .lock-body {
+            width: 220px;
+            height: 180px;
+            background: linear-gradient(145deg, #da99a2, #c36d77);
+            border: 3px solid #8b5a64;
+            border-radius: 15px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3), 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .shackle {
+            width: 190px;
+            height: 150px;
+            border: 20px solid #cec5c5;
+            border-radius: 70% 70% 0 0;
+            position: absolute;
+            top: -170px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+            z-index: -1;
+        }
+
+        .wheels {
+            display: flex;
+            justify-content: space-around;
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+        }
+
+        .wheel-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .wheel {
+            width: 55px;
+            height: 65px;
+            background: linear-gradient(#5c4033, #7a5c4a);
+            border: 3px solid #4a2f24;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6), 0 3px 5px rgba(0, 0, 0, 0.3);
+            position: relative;
+            margin-bottom: 5px;
+        }
+
+        .wheel span {
+            font-size: 28px;
+            color: #fff;
+            text-shadow: 0 0 5px #000;
+            font-family: 'Courier New', monospace;
+        }
+
+        .wheel-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .wheel-buttons button {
+            background: linear-gradient(#a66b74, #8b5a64);
+            color: #fff;
+            border: 1px solid #6b4a54;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 20px;
+            border-radius: 5px;
+            transition: background 0.2s;
+            padding: 0;
+        }
+
+        .wheel-buttons button:hover {
+            background: linear-gradient(#c97b84, #a66b74);
+        }
+
+        .status {
+            margin-top: 20px;
+            color: #fff;
+            font-size: 20px;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            font-style: italic;
+        }
+
+        .heart-decoration {
+            position: absolute;
+            font-size: 40px;
+            color: #b4216f;
+            opacity: 0.5;
+        }
+
+        .heart-decoration.top-left {
+            top: 10px;
+            left: 10px;
+            transform: rotate(-20deg);
+        }
+
+        .heart-decoration.bottom-right {
+            bottom: 140px;
+            right: 10px;
+            transform: rotate(20deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="lock-container">
+        <div class="lock-body">
+            <div class="shackle"></div>
+            <div class="wheels">
+                <div class="wheel-container">
+                    <div class="wheel" id="wheel1"><span>0</span></div>
+                    <div class="wheel-buttons">
+                        <button onclick="changeDigit(1, 1)">↑</button>
+                        <button onclick="changeDigit(1, -1)">↓</button>
+                    </div>
+                </div>
+                <div class="wheel-container">
+                    <div class="wheel" id="wheel2"><span>0</span></div>
+                    <div class="wheel-buttons">
+                        <button onclick="changeDigit(2, 1)">↑</button>
+                        <button onclick="changeDigit(2, -1)">↓</button>
+                    </div>
+                </div>
+                <div class="wheel-container">
+                    <div class="wheel" id="wheel3"><span>0</span></div>
+                    <div class="wheel-buttons">
+                        <button onclick="changeDigit(3, 1)">↑</button>
+                        <button onclick="changeDigit(3, -1)">↓</button>
+                    </div>
+                </div>
+            </div>
+            <div class="heart-decoration top-left">♥</div>
+            <div class="heart-decoration bottom-right">♥</div>
+        </div>
+        <div class="status" id="status">Ingresa nuestra combinación</div>
+    </div>
+
+    <script>
+        const correctCombination = [5, 2, 9]; // Combinación romántica
+        let currentCombination = [0, 0, 0];
+
+        function changeDigit(wheel, delta) {
+            const wheelElement = document.getElementById(`wheel${wheel}`);
+            let currentDigit = parseInt(wheelElement.querySelector('span').textContent);
+            currentDigit = (currentDigit + delta + 10) % 10;
+            wheelElement.querySelector('span').textContent = currentDigit;
+            currentCombination[wheel - 1] = currentDigit;
+            checkCombination();
+        }
+function checkCombination() {
+    const statusElement = document.getElementById('status');
+    if (currentCombination.join('') === correctCombination.join('')) {
+        statusElement.textContent = '¡Nuestro amor está abierto!';
+        statusElement.style.color = '#ffccd5';
+        
+        // Pequeña pausa para que el mensaje se vea antes de abrir la página
+        setTimeout(() => {
+            window.location.href = 'PRUEBA.HTML'; // Cambia por el nombre de tu archivo
+        }, 1000);
+
+    } else {
+        statusElement.textContent = 'Intenta de nuevo, mi amor';
+        statusElement.style.color = '#fff';
+    }
+}
+
+    </script>
+</body>
+</html>
