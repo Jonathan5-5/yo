@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Partículas en Corazón con I LOVE YOU</title>
+    <style>
+        body { 
+            
+            margin: 0; 
+            overflow: hidden; 
+     background: 
+  url('mini-hearth.png') repeat, 
+  rgb(0, 0, 0);
+background-size: 40% auto, cover;
+
+            font-family: 'Georgia', serif;
+        }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Ajustar canvas al tamaño de la pantalla
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // Configuración
+        const PARTICULAS_CORAZON = 1300; 
+        const PARTICULAS_TEXTO = 1850; // Aún más partículas para el texto
+        const DURACION_CAOS = 2500; // 2.5 segundos
+        const DURACION_CORAZON = 3000; // Tiempo para formar corazón
+        let particulas = [];
+        
+        // Clase Partícula
+        class Particula {
+            constructor(tipo = 'corazon') {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 3 - 1.5;
+                this.speedY = Math.random() * 3 - 1.5;
+                this.tipo = tipo;
+                this.grosor = Math.random() * 25 + 8;
+                
+                // Colores diferentes para corazón y texto
+                // Colores para el texto con mayor saturación y luminosidad ajustada
+if (tipo === 'texto') {
+    const coloresTexto = [
+        `hsl(0, 0%, ${85 + Math.random() * 1}%)`, // Blanco brillante
+        `hsl(${45 + Math.random() * 15}, 100%, ${70 + Math.random() * 15}%)`, // Dorado más intenso
+        `hsl(${350 + Math.random() * 20}, 100%, ${60 + Math.random() * 20}%)`, // Rosa fuerte
+        `hsl(300, 100%, ${50 + Math.random() * 20}%)` // Morado vibrante
+    ];
+    this.color = coloresTexto[Math.floor(Math.random() * coloresTexto.length)];
+    this.size = Math.random() * 1.5 +1; // Partículas más grandes y más detalladas
+} 
+// Colores para el corazón más intensos y contrastados
+else {
+    const coloresRomanticos = [
+        `hsl(${350 + Math.random() * 20}, 90%, ${40 + Math.random() * 20}%)`, // Rojo intenso
+        `hsl(${320 + Math.random() * 30}, 80%, ${50 + Math.random() * 30}%)`, // Rosa fuerte
+        `hsl(${45 + Math.random() * 15}, 90%, ${50 + Math.random() * 25}%)`,  // Dorado brillante
+        `hsl(0, 0%, ${90 + Math.random() * 10}%)`,                           // Blanco intenso
+        `hsl(${340 + Math.random() * 25}, 80%, ${55 + Math.random() * 25}%)` // Rosa claro brillante
+    ];
+    this.color = coloresRomanticos[Math.floor(Math.random() * coloresRomanticos.length)];
+}
+
+            }
+            
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                // Rebotes en bordes
+                if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+            }
+            
+            draw() {
+                // Resplandor para texto
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = this.tipo === 'texto' ? 10 : 8;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Resetear sombra
+                ctx.shadowBlur = 0;
+            }
+        }
+        
+        // Crear partículas
+        function init() {
+            particulas = [];
+            // Partículas del corazón
+            for (let i = 0; i < PARTICULAS_CORAZON; i++) {
+                particulas.push(new Particula('corazon'));
+            }
+            // Partículas del texto
+            for (let i = 0; i < PARTICULAS_TEXTO; i++) {
+                particulas.push(new Particula('texto'));
+            }
+        }
+        
+        // Función para obtener puntos del texto "I LOVE YOU"
+        function obtenerPuntosTexto() {
+            const centroX = canvas.width / 2;
+            const centroY = canvas.height / 2 -82;
+            const puntos = [];
+            
+            // Configurar texto
+            const fontSize = 85;
+            const font = `${fontSize}px Arial, sans-serif`;
+            ctx.font = font;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            const texto = 'I LOVE YOU';
+            const medidas = ctx.measureText(texto);
+            const anchoTexto = medidas.width;
+            const altoTexto = fontSize;
+            
+            // Canvas temporal con suficiente espacio
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = Math.ceil(anchoTexto) + 30;
+            tempCanvas.height = altoTexto + 30;
+            
+            // Configurar y dibujar texto
+            tempCtx.font = font;
+            tempCtx.fillStyle = 'white';
+            tempCtx.textAlign = 'center';
+            tempCtx.textBaseline = 'middle';
+            tempCtx.fillText(texto, tempCanvas.width/2, tempCanvas.height/2);
+            
+            // Obtener píxeles
+            const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+            const data = imageData.data;
+            
+            // Extraer puntos - cada 2 píxeles para buena densidad
+            for (let y = 0; y < tempCanvas.height; y += 2) {
+                for (let x = 0; x < tempCanvas.width; x += 2) {
+                    const index = (y * tempCanvas.width + x) * 4;
+                    if (data[index + 3] > 228) { // Alpha > 128
+                        puntos.push({
+                            x: centroX - tempCanvas.width/2 + x,
+                            y: centroY - tempCanvas.height/2 + y
+                        });
+                    }
+                }
+            }
+            
+            return puntos;
+        }
+        
+        // Función para formar corazón grueso
+        function formarCorazon() {
+            const centroX = canvas.width / 2;
+            const centroY = canvas.height / 2 - 50; // Bajar un poco el corazón
+            const tamano = 20;
+            
+            const particulasCorazon = particulas.filter(p => p.tipo === 'corazon');
+            
+            particulasCorazon.forEach((p, i) => {
+                // Crear múltiples capas para grosor
+                const angulo = (i / particulasCorazon.length) * Math.PI * 6; // Más vueltas para mayor densidad
+                
+                // Ecuación paramétrica del corazón
+                const t = angulo - Math.PI;
+                const baseX = 16 * Math.pow(Math.sin(t), 3);
+                const baseY = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                
+                // Agregar variación aleatoria para crear grosor
+                const variacionX = (Math.random() - 0.9) * p.grosor;
+                const variacionY = (Math.random() - 0.9) * p.grosor;
+                
+                // Destino con grosor
+                p.destinoX = centroX + (baseX * tamano) + variacionX;
+                p.destinoY = centroY + (baseY * tamano) + variacionY;
+                
+                // Mover gradualmente
+                p.x += (p.destinoX - p.x) * 0.035;
+                p.y += (p.destinoY - p.y) * 0.035;
+            });
+        }
+        
+        // Función para formar texto "I LOVE YOU"
+        function formarTexto() {
+            const puntosTexto = obtenerPuntosTexto();
+            const particulasTexto = particulas.filter(p => p.tipo === 'texto');
+            
+            if (puntosTexto.length === 0) return;
+            
+            particulasTexto.forEach((p, i) => {
+                // Asignar punto del texto a cada partícula
+                const indicePunto = i % puntosTexto.length;
+                const punto = puntosTexto[indicePunto];
+                
+                // Sin variación para texto más preciso
+                p.destinoX = punto.x;
+                p.destinoY = punto.y;
+                
+                // Mover gradualmente
+                p.x += (p.destinoX - p.x) * 0.04;
+                p.y += (p.destinoY - p.y) * 0.04;
+            });
+        }
+        
+        // Loop de animación
+        let startTime = Date.now();
+        
+       function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    const elapsed = Date.now() - startTime;
+    
+    // Fase 1: Partículas libres (primeros 2.5 segundos)
+    if (elapsed < DURACION_CAOS) {
+        particulas.forEach(p => {
+            p.update();
+            p.draw();
+        });
+    } 
+    // Fase 2: Formar corazón y texto al mismo tiempo
+    else {
+        formarCorazon();
+        formarTexto();
+        particulas.forEach(p => p.draw());
+    }
+    
+    requestAnimationFrame(animate);
+}
+        
+        // Iniciar
+        init();
+        animate();
+        
+        // Redimensionar
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            init();
+            startTime = Date.now(); // Reiniciar animación
+        });
+    </script>
+</body>
+</html>
